@@ -10,14 +10,24 @@
 
 (define (get-product-fixed-sum fixed-sum xs)
   (if (null? xs)
-      null
-      (let* (
-             [hd (car xs)]
+      (- 1)
+      (let* ([hd (car xs)]
              [tl (cdr xs)]
              [v (check-sum hd fixed-sum tl)])
         (if (> v (- 1))
             v
             (get-product-fixed-sum fixed-sum tl)))))
+
+(define (get-product-fixed-sum-triple fixed-sum xs)
+  (if (null? xs)
+      (-1)
+      (let* ([hd (car xs)]
+             [tl (cdr xs)]
+             [target (- fixed-sum hd)]
+             [v (get-product-fixed-sum target tl)])
+        (if (> v (- 1))
+            (* v hd)
+            (get-product-fixed-sum-triple fixed-sum tl)))))
 
 (define s "1028
 1987
@@ -222,4 +232,6 @@
 
 (define nums (map string->number (string-split s)))
 
-(display (get-product-fixed-sum 2020 nums))
+(displayln (get-product-fixed-sum 2020 nums))
+
+(displayln (get-product-fixed-sum-triple 2020 nums))
