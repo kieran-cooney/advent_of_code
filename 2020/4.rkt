@@ -67,6 +67,18 @@
             (valid-passport-values tl)
             #f))))
 
+(define (valid-passport-values-verbose passport-pairs)
+  (if (null? passport-pairs)
+      null
+      (let* ([hd (car passport-pairs)]
+             [tl (cdr passport-pairs)]
+             [field (car hd)]
+             [value (cadr hd)]
+             [valid-value? (cdr (assoc field field-tests))])
+        (cons (list field value (valid-value? value))
+              (valid-passport-values-verbose tl)))))
+      
+
 (define (valid-passport-2 passport-pairs)
   (if (and (equal? (valid-passport passport-pairs) 1)
            (valid-passport-values passport-pairs))
@@ -84,6 +96,10 @@
 
 (displayln "Invalid test passports")
 (displayln (map valid-passport-2 (load-passports "inputs/4_test1.txt")))
+
+(displayln "Invalid test passports verbose")
+(map displayln (map valid-passport-values-verbose (load-passports "inputs/4_test1.txt")))
+
 
 (displayln "Valid test passports")
 (displayln (map valid-passport-2 (load-passports "inputs/4_test2.txt")))
