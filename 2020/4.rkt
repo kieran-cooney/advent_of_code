@@ -24,7 +24,7 @@
              [units (caddr match)])
         (case units
           [("cm") (and (>= h 150) (<= h 193))]
-          [("in") (and (>= h 59) (<= 76))]
+          [("in") (and (>= h 59) (<= h 76))]
           [else #f]))
       #f))
 
