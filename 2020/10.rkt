@@ -51,7 +51,7 @@
 
 (define (num-arrangements adapters)
   ((num-arrangements-helper (cons 0 adapters))
-   (- (length adapters) 1)))
+   (length adapters)))
 
 (define test1-adapters (read-adapters "inputs/10_test1.txt"))
 (define test2-adapters (read-adapters "inputs/10_test2.txt"))
