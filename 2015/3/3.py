@@ -1,5 +1,6 @@
 from itertools import accumulate
 from operator import add
+import sys
 
 directions = {
     '>': (1, 0),
@@ -53,7 +54,12 @@ def get_num_houses(directions_string: str) -> int:
 
 
 def main():
-    num_houses = get_num_houses(read_directions())
+    if len(sys.argv) > 1:
+        filepath = sys.argv[1]
+    else:
+        filepath = 'input.txt'
+
+    num_houses = get_num_houses(read_directions(filepath))
     print(rf"Number of houses visited: {num_houses}")
 
 
