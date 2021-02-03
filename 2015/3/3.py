@@ -1,5 +1,6 @@
 from itertools import accumulate
-from operator import add
+from functools import reduce
+from operator import add, or_
 import sys
 
 directions = {
@@ -8,6 +9,7 @@ directions = {
     '^': (0, 1),
     'v': (0, -1)
 }
+
 
 class Point:
     def __init__(self, *args):
@@ -43,14 +45,25 @@ class Point:
     def __repr__(self):
         return rf"({self.x}, {self.y})"
 
+
 def read_directions(filepath: str ='input.txt') -> str:
     with open(filepath, 'r') as file:
         s = file.read()
     return s
 
 
-def get_num_houses(directions_string: str) -> int:
-    return len(set(accumulate(directions_string, add, initial=Point())))
+def get_num_houses(directions_string: str, agents: int=1) -> int:
+    agents_directions = [directions_string[i::agents] for i in range(agents)]
+
+    agent_houses = (
+        set(accumulate(directions, add, initial=Point()))
+        for directions in agents_directions
+    )
+
+    visited_houses = reduce(or_, agent_houses)
+    num_houses = len(visited_houses)
+
+    return num_houses
 
 
 def main():
@@ -59,9 +72,13 @@ def main():
     else:
         filepath = 'input.txt'
 
-    num_houses = get_num_houses(read_directions(filepath))
-    print(rf"Number of houses visited: {num_houses}")
+    directions_string = read_directions(filepath)
+    ans1, ans2 = [get_num_houses(directions_string, i) for i in [1, 2]]
+
+    print(rf"Number of houses visited by Santa: {ans1}")
+    print(rf"Number of houses visited by Santa and Robo Santa: {ans2}")
 
 
 if __name__=='__main__':
     main()
+
