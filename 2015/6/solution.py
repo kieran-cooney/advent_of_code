@@ -1,22 +1,18 @@
 """
 Solution to day 6 of advent of code 2015: https://adventofcode.com/2015/day/6
-I use array.array here in place of numpy array. I wouldn't recommend this in
-general, but thought it would be interesting to try. array is a library that
-comes with python, so there is no installing and little importing involved
 
-Note we are representing a 2-d grid of lights by flattening it into a 1-d array.
-The 1000 lights in the first row are first, then the second 1000 directly after,
-etc.
+Friendship ended with array.array
+numpy.array is my new best friend
 """
 
 import re
 import sys
 
-from array import array
+import numpy as np
 from typing import Tuple, Iterable
 
 Instruction = Tuple[str, int, int, int, int]
-Lights = Iterable[int]
+Lights = Iterable
 
 GRID_WIDTH = 1000
 
@@ -43,52 +39,77 @@ def parse_input(filepath: str) -> Iterable[Instruction]:
             yield parse_line(line.strip())
 
 
-def update_light(lights: Lights, instruction_type: str, lights_index: int):
-    """
-    Update a the light of lights at light_index according to instruction type
-    """
-    if instruction_type == 'turn on':
-        lights[lights_index] = 1
-    elif instruction_type == 'turn off':
-        lights[lights_index] = 0
-    elif instruction_type == 'toggle':
-        lights[lights_index] = 1 - lights[lights_index]
-    else:
-        s = "Incorrect value {} for instruction type".format(instruction_type)
-        raise ValueError(s)
-
-
-def update_lights(lights: Lights, instruction: Instruction):
+def update_lights1(lights: Lights, instruction: Instruction):
     """
     Update all relevant lights according to Instruction
     """
     inst_type, x1, y1, x2, y2 = instruction
 
-    # As we have flattened the 2-d grid by appending the rows to each other
-    # col_num + GRID_WIDTH*row_num is the index of the light in lights
-    for row_num in range(y1, y2+1):
-        for col_num in range(x1, x2+1):
-            update_light(lights, inst_type, col_num + GRID_WIDTH*row_num)
+    sub_lights = lights[x1:x2+1,y1:y2+1]
+
+    if inst_type == "turn on":
+        sub_lights[:] = True
+    elif inst_type == "turn off":
+        sub_lights[:] = False
+    elif inst_type == "toggle":
+        np.invert(sub_lights, sub_lights) 
+    else:
+        raise ValueError("Invalid instruction type: " + inst_type)
 
 
-def main(filepath: str):
+def update_lights2(lights: Lights, instruction: Instruction):
+    """
+    Update all relevant lights according to Instruction for part 2
+    """
+    inst_type, x1, y1, x2, y2 = instruction
+
+    sub_lights = lights[x1:x2+1,y1:y2+1]
+
+    if inst_type == "turn on":
+        sub_lights += 1
+    elif inst_type == "turn off":
+        sub_lights[sub_lights > 0] -= 1
+    elif inst_type == "toggle":
+        sub_lights += 2
+    else:
+        raise ValueError("Invalid instruction type: " + inst_type)
+
+
+def update_lights(lights: Lights, instruction: Instruction, part: int):
+    if part == 1:
+        return update_lights1(lights, instruction)
+    elif part == 2:
+        return update_lights2(lights, instruction)
+    else:
+        raise ValueError("Invalid part number: {}".format(part))
+
+
+def main(filepath: str, part: int):
     instructions = parse_input(filepath)
 
-    # array.array doesn't support higher dimensional arrays, so just use a
-    # 1-d array. See docstring at top of page for more info.
-    lights = array('h', (0 for _ in range(GRID_WIDTH**2)))
+    if part == 1:
+        lights = np.zeros((GRID_WIDTH, GRID_WIDTH), dtype=bool)
+    if part == 2:
+        lights = np.zeros((GRID_WIDTH, GRID_WIDTH))
 
     for instruction in instructions:
-        update_lights(lights, instruction)
+        update_lights(lights, instruction, part)
     
-    num_lights_on = sum(lights)
+    num_lights_on = int(np.sum(lights))
 
     print("There are {} lights on".format(num_lights_on))
 
 
 if __name__=='__main__':
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 3:
+        print('Invalid number of arguments provided. Only two required, filepath and part number.')
+    if len(sys.argv) == 3:
         filepath = sys.argv[1]
+        part = int(sys.argv[2])
+    elif len(sys.argv) == 2:
+        filepath = sys.argv[1]
+        part = 2
     else:
         filepath = 'input.txt'
-    main(filepath)
+        part=2
+    main(filepath, part)
