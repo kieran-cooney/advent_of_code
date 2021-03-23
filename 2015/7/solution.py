@@ -140,7 +140,13 @@ class Board:
 def main(filepath):
     board = Board(filepath)
 
-    print(board['a'])
+    ans_1 = board['a']
+    print("Answer for part 1: {}".format(ans_1))
+
+    board.values = dict()
+    board.values['b'] = ans_1
+
+    print("Answer for part 2: {}".format(board['a']))
 
 
 if __name__=='__main__':
