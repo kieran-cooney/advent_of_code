@@ -1,12 +1,19 @@
 import re
 import sys
-from typing import NamedTuple, List, Tuple
+from typing import NamedTuple, List, Tuple, Iterator
+from itertools import repeat, chain, cycle, accumulate
+from collections import defaultdict
+from operator import itemgetter
 
 class Reindeer(NamedTuple):
     name: str
     speed: int
     fly_duration: int
     rest_duration: int
+
+class WinningReindeer(NamedTuple):
+    name: str
+    score: int
 
 INPUT_FILEPATH = 'input.txt'
 DURATION = 2503
@@ -35,38 +42,62 @@ def get_reindeers(filepath: str) -> List[Reindeer]:
     return reindeers
 
 
-def travel_distance(reindeer: Reindeer, duration: int) -> int:
+def distance_iterator(reindeer: Reindeer) -> Iterator[int]:
+    """
+    Return an (infinite) iterator of how far the reindeer has travelled at
+    every second
+    """
     _, speed, fly_duration, rest_duration = reindeer
 
-    period = fly_duration + rest_duration
-    num_cycles, remainder = divmod(duration, period)
+    fly_increments = repeat(speed, fly_duration)
+    rest_increments = repeat(0, rest_duration)
 
-    remainder_fly_time = (
-        fly_duration if fly_duration <= remainder else remainder
-    )
+    cycle_increments = chain(fly_increments, rest_increments)
+    increments = cycle(cycle_increments)
 
-    total_fly_time = remainder_fly_time + num_cycles*fly_duration
-    total_distance = speed*total_fly_time
+    distances = accumulate(increments)
 
-    return total_distance
+    return distances
 
 
-def get_winning_reindeer(reindeers: List[Reindeer], duration: int) -> Tuple[str, int]:
-    name_distance_pairs = (
-        (r.name, travel_distance(r, duration))
-        for r in reindeers
+def score_reindeers(reindeers: List[Reindeer], duration: int) -> Tuple[WinningReindeer, WinningReindeer]:
+    """
+    Get the winning reindeers for both parts with their respective score
+    """
+    scores = defaultdict(int)
+
+    iterators = [(r.name, distance_iterator(r)) for r in reindeers]
+
+    for _ in range(duration):
+        winner, distance = max(
+            ((name, next(it)) for name, it in iterators),
+            key=itemgetter(1)
         )
-    winning_reindeer = max(name_distance_pairs, key=lambda p: p[1])
-    return winning_reindeer
+        
+        scores[winner] += 1
+    
+    winner_1 = WinningReindeer(winner, distance)
+    winner_2 = max(
+        ((name, score)for name, score in scores.items()),
+        key=itemgetter(1)
+    )
+    winner_2 = WinningReindeer(*winner_2)
+
+    return winner_1, winner_2
 
 
 def main(filepath: str, duration: int):
     reindeers = get_reindeers(filepath)
-    winning_reindeer, distance = get_winning_reindeer(reindeers, duration)
+    winner_1, winner_2 = score_reindeers(reindeers, duration)
     print(
-        "{} is the winning reindeer, having travelled {} km in {} seconds!"
-        .format(winning_reindeer, distance, duration)
+        "{} is the winning reindeer for part 1, having travelled {} km in {} seconds!"
+        .format(winner_1.name, winner_1.score, duration)
     )
+    print(
+        "{} is the winning reindeer for part 2, having scored {} points in {} seconds!"
+        .format(winner_2.name, winner_2.score, duration)
+    )
+
 
 if __name__=='__main__':
     num_args = len(sys.argv) - 1
