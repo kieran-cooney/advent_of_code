@@ -58,11 +58,12 @@ class MagicBattle():
     battle.turn(spells[1])
     """
     def __init__(self, boss_hp, boss_dmg, player_hp=PLAYER_HP,
-                 player_mp=PLAYER_MP):
+                 player_mp=PLAYER_MP, player_poison=0):
         self.boss_hp = boss_hp
         self.boss_dmg = boss_dmg
         self.player_hp = player_hp
         self.player_mp = player_mp
+        self.player_poison = player_poison
 
         # Calculate boss dmg when player has armor once as it only
         # ever takes one value
@@ -186,6 +187,11 @@ class MagicBattle():
     def player_turn(self, spell):
         # Take player turn, performing the input spell
         assert spell in self.available_spells
+        self.player_hp -= self.player_poison
+
+        if self.player_hp <= 0:
+            self.boss_wins = True
+
         self.resolve_effects()
 
         spell.func(self)
@@ -199,7 +205,7 @@ class MagicBattle():
 
         if self.boss_hp <= 0:
             self.player_wins = True
-        
+
     def boss_turn(self):
         # Take boss turn
         self.resolve_effects()
@@ -277,6 +283,12 @@ def find_cheapest_spells(battle):
 def main(filepath):
     boss_dict = parse_input(filepath)
     battle = MagicBattle(boss_dict['Hit Points'], boss_dict['Damage'])
+
+    lowest_mana, winning_spells, num_battles = find_cheapest_spells(battle)
+    print("The player can win using the least amount of mana ({}) with the spells {}".format(lowest_mana, winning_spells))
+    print("{} battles were simulated to find this solution".format(num_battles))
+
+    battle = MagicBattle(boss_dict['Hit Points'], boss_dict['Damage'], player_poison=1)
 
     lowest_mana, winning_spells, num_battles = find_cheapest_spells(battle)
     print("The player can win using the least amount of mana ({}) with the spells {}".format(lowest_mana, winning_spells))
